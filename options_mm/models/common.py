@@ -70,6 +70,15 @@ class Option(Instrument):
     theoretical: float = 0.0
     implied_vol: float = 0.0
     quote: Quote = Field(default_factory=Quote)
+    user_bid: float = 0.0
+    user_ask: float = 0.0
+    user_bid_qty: int = 0
+    user_ask_qty: int = 0
+    market_bid: float = 0.0
+    market_ask: float = 0.0
+    market_bid_qty: int = 0
+    market_ask_qty: int = 0
+    position: int = 0
     greeks: Greeks = Field(default_factory=Greeks)
 
 

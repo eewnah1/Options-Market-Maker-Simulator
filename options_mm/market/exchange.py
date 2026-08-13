@@ -71,6 +71,19 @@ class OrderBook:
     def best_ask(self) -> Order | None:
         return self.asks[0] if self.asks else None
 
+    def best_by_agent(self, agent: str, side: str) -> Order | None:
+        lst = self.bids if side == "BUY" else self.asks
+        for o in lst:
+            if o.agent == agent:
+                return o
+        return None
+
+    def best_by_agent_bid(self, agent: str) -> Order | None:
+        return self.best_by_agent(agent, "BUY")
+
+    def best_by_agent_ask(self, agent: str) -> Order | None:
+        return self.best_by_agent(agent, "SELL")
+
     def _cross(self, incoming: Order, resting: list[Order]) -> list[tuple[int, float, str, Order]]:
         fills: list[tuple[int, float, str, Order]] = []
         while incoming.remaining > 0 and resting:

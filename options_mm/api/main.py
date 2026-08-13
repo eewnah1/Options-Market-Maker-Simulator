@@ -78,6 +78,12 @@ class ComboTradeRequest(BaseModel):
     price: float | None = None
 
 
+class MarketOrderRequest(BaseModel):
+    instrument_id: str
+    side: str = Field(pattern="^(BUY|SELL)$")
+    qty: int
+
+
 class VolAdjustRequest(BaseModel):
     delta: float
 
@@ -134,6 +140,12 @@ async def quote(instrument_id: str, req: QuoteRequest) -> dict[str, str]:
 @app.post("/api/v1/market/{instrument_id}")
 async def market_order(instrument_id: str, side: str, qty: int) -> dict[str, Any]:
     trades = get_sim().user_market_order(instrument_id, side.upper(), qty)
+    return {"trades": [t.model_dump() for t in trades]}
+
+
+@app.post("/api/v1/market/order")
+async def market_order_body(req: MarketOrderRequest) -> dict[str, Any]:
+    trades = get_sim().user_market_order(req.instrument_id, req.side.upper(), req.qty)
     return {"trades": [t.model_dump() for t in trades]}
 
 

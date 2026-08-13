@@ -16,6 +16,7 @@ from options_mm.models.common import (
     OptionType,
     PortfolioState,
     Position,
+    Quote,
     RiskPoint,
     SimulationConfig,
     StrategyConfig,
@@ -80,6 +81,7 @@ class SimulationEngine:
             self.exchange.cancel_agent(opt.id, "USER")
             self.exchange.cancel_agent(opt.id, "BOT")
         self._quote_all()
+        self._sync_quotes()
 
     def _quote_all(self) -> None:
         for opt in self.options:
@@ -87,6 +89,35 @@ class SimulationEngine:
             ask = self._to_increment(opt.theoretical * 1.005)
             self.exchange.add(opt.id, "USER", "BUY", bid, self.strategy.quote_size)
             self.exchange.add(opt.id, "USER", "SELL", ask, self.strategy.quote_size)
+
+    def _sync_quotes(self) -> None:
+        for opt in self.options:
+            book = self.exchange.book(opt.id)
+            bb = book.best_bid()
+            ba = book.best_ask()
+            opt.market_bid = bb.price if bb else 0.0
+            opt.market_bid_qty = bb.remaining if bb else 0
+            opt.market_ask = ba.price if ba else 0.0
+            opt.market_ask_qty = ba.remaining if ba else 0
+            ub = book.best_by_agent_bid("USER")
+            ua = book.best_by_agent_ask("USER")
+            opt.user_bid = ub.price if ub else 0.0
+            opt.user_bid_qty = ub.remaining if ub else 0
+            opt.user_ask = ua.price if ua else 0.0
+            opt.user_ask_qty = ua.remaining if ua else 0
+            opt.quote = Quote(
+                bid=opt.market_bid,
+                bid_qty=opt.market_bid_qty,
+                ask=opt.market_ask,
+                ask_qty=opt.market_ask_qty,
+                spread=round(opt.market_ask - opt.market_bid, 4),
+                mid=round((opt.market_bid + opt.market_ask) / 2, 4) if opt.market_bid and opt.market_ask else 0.0,
+            )
+
+    def _sync_positions(self) -> None:
+        for opt in self.options:
+            pos = self.portfolio.positions.get(opt.id)
+            opt.position = pos.qty if pos else 0
 
     def _to_increment(self, price: float) -> float:
         if self.market.increment_mode == "eighth":
@@ -154,6 +185,7 @@ class SimulationEngine:
         )
         self.portfolio.unrealized_pnl = position_value
         self.portfolio.total_pnl = self.portfolio.cash + position_value - 1_000_000.0
+        self._sync_positions()
 
     def user_quote(self, instrument_id: str, bid: float, bid_qty: int, ask: float, ask_qty: int) -> None:
         book = self.exchange.book(instrument_id)
@@ -162,12 +194,14 @@ class SimulationEngine:
             self.exchange.add(instrument_id, "USER", "BUY", bid, bid_qty)
         if ask_qty > 0:
             self.exchange.add(instrument_id, "USER", "SELL", ask, ask_qty)
+        self._sync_quotes()
 
     def user_market_order(self, instrument_id: str, side: str, qty: int) -> list[Trade]:
         trades = self.exchange.market(instrument_id, "USER_TAKER", side, qty)
         for t in trades:
             self._apply_trade(t, self._mark_price(t.instrument_id))
         self._mark_portfolio()
+        self._sync_quotes()
         return trades
 
     def _mark_price(self, instrument_id: str) -> float:
@@ -224,6 +258,8 @@ class SimulationEngine:
                     user_side = "SELL" if t.side == "BUY" else "BUY"
                     self._apply_trade(t, opt.theoretical, user_side)
         self._mark_portfolio()
+        self._sync_positions()
+        self._sync_quotes()
         self._update_market_state()
 
     def _simulation_counter(self) -> None:
@@ -290,6 +326,7 @@ class SimulationEngine:
             t.instrument_id = self.future.symbol
             self._apply_trade(t, self.spot)
         self._mark_portfolio()
+        self._sync_quotes()
         return trades
 
     def combo_trade(self, combo_id: str, side: str, qty: int, price: float | None = None) -> list[Trade]:
@@ -314,6 +351,7 @@ class SimulationEngine:
         for t in trades:
             self._apply_trade(t, self._mark_price(t.instrument_id))
         self._mark_portfolio()
+        self._sync_quotes()
         return trades
 
     def risk_matrix(self, shocks: list[float] | None = None) -> list[RiskPoint]:
@@ -380,6 +418,9 @@ class SimulationEngine:
 
     def get_state(self) -> dict[str, Any]:
         self._mark_portfolio()
+        self._sync_quotes()
+        market_trades = [t.model_dump() for t in self.portfolio.trades if t.counterparty != "USER"]
+        user_trades = [t.model_dump() for t in self.portfolio.trades if t.counterparty == "USER"]
         return {
             "market": self.market.model_dump(),
             "future": self.future.model_dump(),
@@ -388,4 +429,8 @@ class SimulationEngine:
             "combos": [c.model_dump() for c in self.combos],
             "risk": [r.model_dump() for r in self.risk_matrix()],
             "vol_curve": [v.model_dump() for v in self.vol_curve()],
+            "spot_history": self.history_spot[-100:],
+            "vol_history": self.history_vol[-100:],
+            "market_trades": market_trades[-50:],
+            "user_trades": user_trades[-50:],
         }
