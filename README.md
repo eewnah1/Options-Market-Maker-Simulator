@@ -6,7 +6,7 @@ bid/ask quoting, Black-Scholes theoreticals, Greeks, a limit-order-book
 exchange, customer flow, a competitive bot, futures hedging, combo trading,
 vol-surface controls, and a risk matrix.
 
-**Live no-auth dashboard:** https://feeling-maui-preservation-patterns.trycloudflare.com/dashboard
+**Live no-auth dashboard:** https://residential-annotation-moves-readily.trycloudflare.com/dashboard
 
 ## Quick start
 
