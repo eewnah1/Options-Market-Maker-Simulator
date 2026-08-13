@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Options Market Maker Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Options Market Maker Simulator</h1>
+    <div id="market-pills">
+      <div class="pill"><span>Spot</span><b id="spot">--</b></div>
+      <div class="pill"><span>ATM Vol</span><b id="atm-vol">--</b></div>
+      <div class="pill"><span>Days</span><b id="days">--</b></div>
+      <div class="pill"><span>Step</span><b id="step">--</b></div>
+      <div class="pill"><span>PnL</span><b id="pnl">--</b></div>
+    </div>
+    <div id="controls">
+      <button id="btn-start" class="primary">Start</button>
+      <button id="btn-pause">Pause</button>
+      <button id="btn-step">Step</button>
+      <button id="btn-reset" class="danger">Reset</button>
+      <button id="btn-increment">Penny</button>
+    </div>
+  </header>
+  <div id="warning-banner">LESSON ENDS IN &lt;10 SECONDS</div>
+
+  <main>
+    <div id="left">
+      <div class="panel" style="padding:0; overflow:hidden;">
+        <div class="tabs" style="padding:0.5rem 0.75rem 0;">
+          <button class="tab active" data-tab="board">Option Board</button>
+          <button class="tab" data-tab="combos">Combos</button>
+        </div>
+        <div id="tab-board" class="tab-content">
+          <div id="option-board">
+            <table id="options-table">
+              <thead>
+                <tr>
+                  <th>Call Bid</th><th>Call BidQty</th><th>Call Ask</th><th>Call AskQty</th>
+                  <th class="strike">Strike</th>
+                  <th>Put Bid</th><th>Put BidQty</th><th>Put Ask</th><th>Put AskQty</th>
+                  <th>Theo</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-combos" class="tab-content" style="display:none; padding:0.75rem;">
+          <div id="combo-panel">
+            <select id="combo-select"></select>
+            <select id="combo-side"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+            <input type="number" id="combo-qty" value="1" min="1" />
+            <button id="btn-combo-trade" class="primary">Trade Combo</button>
+          </div>
+          <div id="combo-legs" style="margin-top:0.75rem;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="right">
+      <div class="panel">
+        <h3>Portfolio Greeks</h3>
+        <div id="portfolio-grid"></div>
+      </div>
+      <div class="panel">
+        <h3>Futures Ladder</h3>
+        <div id="futures-ladder">
+          <button id="btn-fut-minus">-5 lots</button>
+          <div class="price" id="fut-price">--</div>
+          <button id="btn-fut-plus">+5 lots</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Market Trades</h3>
+        <div id="trades">
+          <table><thead><tr><th>Time</th><th>Inst</th><th>Side</th><th>Qty</th><th>Price</th><th>Cpty</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Vol Curve</h3>
+        <div class="chart-container"><canvas id="vol-chart"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Risk Matrix</h3>
+        <div class="chart-container"><canvas id="risk-chart"></canvas></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="footer">
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+      <button id="btn-vol-down">Vol -0.01</button>
+      <button id="btn-vol-up">Vol +0.01</button>
+      <button id="btn-skew-down">Skew -0.01</button>
+      <button id="btn-skew-up">Skew +0.01</button>
+      <span id="status" style="margin-left:auto;">Disconnected</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
