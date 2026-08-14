@@ -6,7 +6,7 @@ bid/ask quoting, Black-Scholes theoreticals, Greeks, a limit-order-book
 exchange, customer flow, a competitive bot, futures hedging, combo trading,
 vol-surface controls, and a risk matrix.
 
-**Live no-auth dashboard:** https://lotus-pty-governments-pulled.trycloudflare.com/dashboard
+**Live no-auth dashboard:** https://burlington-marathon-category-strengths.trycloudflare.com/dashboard
 
 ## Quick start
 
